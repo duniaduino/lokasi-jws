@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ambil Lokasi dan Kirim ke NodeMCU</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+    button { padding: 10px 15px; font-size: 16px; margin-top: 10px; cursor: pointer; }
+    #output { margin-top: 20px; font-size: 16px; }
+  </style>
+</head>
+<body>
+
+  <h3>Gunakan Lokasi Saya</h3>
+  <button onclick="ambilLokasi()">Ambil Lokasi</button>
+  <button onclick="kirimKeNodeMCU()" style="background: green; color: white;">Kirim ke NodeMCU</button>
+
+  <div id="output">Klik tombol untuk ambil lokasi...</div>
+
+  <script>
+    let lat = null;
+    let lon = null;
+    let gmt = null;
+
+    function ambilLokasi() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          lat = pos.coords.latitude.toFixed(2);
+          lon = pos.coords.longitude.toFixed(2);
+          gmt = -new Date().getTimezoneOffset() / 60;
+          document.getElementById("output").innerHTML = `
+            <b>Latitude:</b> ${lat}<br>
+            <b>Longitude:</b> ${lon}<br>
+            <b>GMT:</b> ${gmt >= 0 ? '+' + gmt : gmt}<br><br>
+            Sekarang konek ke WiFi JWS, lalu klik tombol kirim.
+          `;
+        }, err => {
+          document.getElementById("output").innerText = "Gagal ambil lokasi: " + err.message;
+        });
+      } else {
+        alert("Browser tidak mendukung Geolocation.");
+      }
+    }
+
+    function kirimKeNodeMCU() {
+      if (lat && lon && gmt !== null) {
+        const url = `http://192.168.4.1/?setting1=${lat}&setting2=${lon}&setting3=${gmt}`;
+        fetch(url)
+          .then(() => alert("Data berhasil dikirim ke NodeMCU!"))
+          .catch(err => alert("Gagal kirim data: " + err));
+      } else {
+        alert("Ambil lokasi dulu sebelum mengirim.");
+      }
+    }
+  </script>
+
+</body>
+</html>
